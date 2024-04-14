@@ -241,17 +241,21 @@ void AppTask::ButtonPushHandler(const AppEvent &event)
 			Instance().StartTimer(Timer::Function, kFactoryResetTriggerTimeout);
 			Instance().mFunction = FunctionEvent::SoftwareUpdate;
 			break;
-		case
-#if NUMBER_OF_BUTTONS == 2
-			BLE_ADVERTISEMENT_START_AND_SWITCH_BUTTON:
+		case BLE_ADVERTISEMENT_START_BUTTON:
 			if (!ConnectivityMgr().IsBLEAdvertisingEnabled() &&
 			    Server::GetInstance().GetFabricTable().FabricCount() == 0) {
 				break;
 			}
-#else
-			SWITCH_BUTTON:
-#endif
-			LOG_INF("Button has been pressed, keep in this state for at least 500 ms to change light sensitivity of binded lighting devices.");
+		case SWITCH0_BUTTON:
+			LOG_INF("Button 0 has been pressed, keep in this state for at least 500 ms to change light sensitivity of binded lighting devices.");
+			Instance().StartTimer(Timer::DimmerTrigger, kDimmerTriggeredTimeout);
+			break;
+		case SWITCH1_BUTTON:
+			LOG_INF("Button 1 has been pressed, keep in this state for at least 500 ms to change light sensitivity of binded lighting devices.");
+			Instance().StartTimer(Timer::DimmerTrigger, kDimmerTriggeredTimeout);
+			break;
+		case SWITCH2_BUTTON:
+			LOG_INF("Button 2 has been pressed, keep in this state for at least 500 ms to change light sensitivity of binded lighting devices.");
 			Instance().StartTimer(Timer::DimmerTrigger, kDimmerTriggeredTimeout);
 			break;
 		default:
@@ -283,21 +287,34 @@ void AppTask::ButtonReleaseHandler(const AppEvent &event)
 				LOG_INF("Factory Reset has been canceled");
 			}
 			break;
-#if NUMBER_OF_BUTTONS == 4
-		case SWITCH_BUTTON:
-#else
-		case BLE_ADVERTISEMENT_START_AND_SWITCH_BUTTON:
+		case BLE_ADVERTISEMENT_START_BUTTON:
 			if (!ConnectivityMgr().IsBLEAdvertisingEnabled() &&
 			    Server::GetInstance().GetFabricTable().FabricCount() == 0) {
 				AppEvent buttonEvent;
 				buttonEvent.Type = AppEventType::Button;
-				buttonEvent.ButtonEvent.PinNo = BLE_ADVERTISEMENT_START_AND_SWITCH_BUTTON;
+				buttonEvent.ButtonEvent.PinNo = BLE_ADVERTISEMENT_START_BUTTON;
 				buttonEvent.ButtonEvent.Action = static_cast<uint8_t>(AppEventType::ButtonPushed);
 				buttonEvent.Handler = StartBLEAdvertisementHandler;
 				PostEvent(buttonEvent);
-				break;
 			}
-#endif
+            break;
+		case SWITCH0_BUTTON:
+			if (!sWasDimmerTriggered) {
+				LightSwitch::GetInstance().InitiateActionSwitch(LightSwitch::Action::Toggle);
+			}
+			Instance().CancelTimer(Timer::Dimmer);
+			Instance().CancelTimer(Timer::DimmerTrigger);
+			sWasDimmerTriggered = false;
+			break;
+		case SWITCH1_BUTTON:
+			if (!sWasDimmerTriggered) {
+				LightSwitch::GetInstance().InitiateActionSwitch(LightSwitch::Action::Toggle);
+			}
+			Instance().CancelTimer(Timer::Dimmer);
+			Instance().CancelTimer(Timer::DimmerTrigger);
+			sWasDimmerTriggered = false;
+			break;
+		case SWITCH2_BUTTON:
 			if (!sWasDimmerTriggered) {
 				LightSwitch::GetInstance().InitiateActionSwitch(LightSwitch::Action::Toggle);
 			}
@@ -446,14 +463,14 @@ void AppTask::UpdateStatusLED()
 
 	/* Update the status LED.
 	 *
-	 * If IPv6 network and service provisioned, keep the LED on constantly.
+	 * If IPv6 network and service provisioned, keep the LED off constantly.
 	 *
 	 * If the system has BLE connection(s) up till the stage above, THEN blink the LED at an even
 	 * rate of 100ms.
 	 *
 	 * Otherwise, blink the LED for a very short time. */
 	if (sIsNetworkProvisioned && sIsNetworkEnabled) {
-		sStatusLED.Set(true);
+		sStatusLED.Set(false);
 	} else if (sHaveBLEConnections) {
 		sStatusLED.Blink(LedConsts::StatusLed::Unprovisioned::kOn_ms,
 				 LedConsts::StatusLed::Unprovisioned::kOff_ms);
@@ -480,32 +497,47 @@ void AppTask::ButtonEventHandler(uint32_t buttonState, uint32_t hasChanged)
 		PostEvent(buttonEvent);
 	}
 
-#if NUMBER_OF_BUTTONS == 2
-	uint32_t buttonMask = BLE_ADVERTISEMENT_START_AND_SWITCH_BUTTON_MASK;
-	buttonEvent.ButtonEvent.PinNo = BLE_ADVERTISEMENT_START_AND_SWITCH_BUTTON;
-#else
-	uint32_t buttonMask = SWITCH_BUTTON_MASK;
-	buttonEvent.ButtonEvent.PinNo = SWITCH_BUTTON;
-#endif
 
-	if (buttonMask & buttonState & hasChanged) {
+    buttonEvent.ButtonEvent.PinNo = SWITCH0_BUTTON;
+	if (SWITCH0_BUTTON_MASK & buttonState & hasChanged) {
 		buttonEvent.ButtonEvent.Action = static_cast<uint8_t>(AppEventType::ButtonPushed);
 		buttonEvent.Handler = ButtonPushHandler;
 		PostEvent(buttonEvent);
-	} else if (buttonMask & hasChanged) {
+	} else if (SWITCH0_BUTTON_MASK & hasChanged) {
 		buttonEvent.ButtonEvent.Action = static_cast<uint8_t>(AppEventType::ButtonReleased);
 		buttonEvent.Handler = ButtonReleaseHandler;
 		PostEvent(buttonEvent);
 	}
 
-#if NUMBER_OF_BUTTONS == 4
+    buttonEvent.ButtonEvent.PinNo = SWITCH1_BUTTON;
+	if (SWITCH1_BUTTON_MASK & buttonState & hasChanged) {
+		buttonEvent.ButtonEvent.Action = static_cast<uint8_t>(AppEventType::ButtonPushed);
+		buttonEvent.Handler = ButtonPushHandler;
+		PostEvent(buttonEvent);
+	} else if (SWITCH1_BUTTON_MASK & hasChanged) {
+		buttonEvent.ButtonEvent.Action = static_cast<uint8_t>(AppEventType::ButtonReleased);
+		buttonEvent.Handler = ButtonReleaseHandler;
+		PostEvent(buttonEvent);
+	}
+
+    buttonEvent.ButtonEvent.PinNo = SWITCH2_BUTTON;
+	if (SWITCH2_BUTTON_MASK & buttonState & hasChanged) {
+		buttonEvent.ButtonEvent.Action = static_cast<uint8_t>(AppEventType::ButtonPushed);
+		buttonEvent.Handler = ButtonPushHandler;
+		PostEvent(buttonEvent);
+	} else if (SWITCH2_BUTTON_MASK & hasChanged) {
+		buttonEvent.ButtonEvent.Action = static_cast<uint8_t>(AppEventType::ButtonReleased);
+		buttonEvent.Handler = ButtonReleaseHandler;
+		PostEvent(buttonEvent);
+	}
+
+
 	if (BLE_ADVERTISEMENT_START_BUTTON_MASK & hasChanged & buttonState) {
 		buttonEvent.ButtonEvent.PinNo = BLE_ADVERTISEMENT_START_BUTTON;
 		buttonEvent.ButtonEvent.Action = static_cast<uint8_t>(AppEventType::ButtonPushed);
 		buttonEvent.Handler = StartBLEAdvertisementHandler;
 		PostEvent(buttonEvent);
 	}
-#endif
 }
 
 void AppTask::StartTimer(Timer timer, uint32_t timeoutMs)
