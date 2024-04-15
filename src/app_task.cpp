@@ -247,17 +247,17 @@ void AppTask::ButtonPushHandler(const AppEvent &event)
 				break;
 			}
 		case SWITCH0_BUTTON:
-            LightSwitch::GetInstance().SetKeyId(0);
+            LightSwitch::GetInstance().SetCurrentSwitchEndpoint(1);
 			LOG_INF("Button 0 has been pressed, keep in this state for at least 500 ms to change light sensitivity of binded lighting devices.");
 			Instance().StartTimer(Timer::DimmerTrigger, kDimmerTriggeredTimeout);
 			break;
 		case SWITCH1_BUTTON:
-            LightSwitch::GetInstance().SetKeyId(1);
+            LightSwitch::GetInstance().SetCurrentSwitchEndpoint(2);
 			LOG_INF("Button 1 has been pressed, keep in this state for at least 500 ms to change light sensitivity of binded lighting devices.");
 			Instance().StartTimer(Timer::DimmerTrigger, kDimmerTriggeredTimeout);
 			break;
 		case SWITCH2_BUTTON:
-            LightSwitch::GetInstance().SetKeyId(2);
+            LightSwitch::GetInstance().SetCurrentSwitchEndpoint(3);
 			LOG_INF("Button 2 has been pressed, keep in this state for at least 500 ms to change light sensitivity of binded lighting devices.");
 			Instance().StartTimer(Timer::DimmerTrigger, kDimmerTriggeredTimeout);
 			break;
@@ -302,7 +302,7 @@ void AppTask::ButtonReleaseHandler(const AppEvent &event)
 			}
             break;
 		case SWITCH0_BUTTON:
-            LightSwitch::GetInstance().SetKeyId(0);
+            LightSwitch::GetInstance().SetCurrentSwitchEndpoint(1);
 			if (!sWasDimmerTriggered) {
 				LightSwitch::GetInstance().InitiateActionSwitch(LightSwitch::Action::Toggle);
 			}
@@ -311,7 +311,7 @@ void AppTask::ButtonReleaseHandler(const AppEvent &event)
 			sWasDimmerTriggered = false;
 			break;
 		case SWITCH1_BUTTON:
-            LightSwitch::GetInstance().SetKeyId(1);
+            LightSwitch::GetInstance().SetCurrentSwitchEndpoint(2);
 			if (!sWasDimmerTriggered) {
 				LightSwitch::GetInstance().InitiateActionSwitch(LightSwitch::Action::Toggle);
 			}
@@ -320,7 +320,7 @@ void AppTask::ButtonReleaseHandler(const AppEvent &event)
 			sWasDimmerTriggered = false;
 			break;
 		case SWITCH2_BUTTON:
-            LightSwitch::GetInstance().SetKeyId(2);
+            LightSwitch::GetInstance().SetCurrentSwitchEndpoint(3);
 			if (!sWasDimmerTriggered) {
 				LightSwitch::GetInstance().InitiateActionSwitch(LightSwitch::Action::Toggle);
 			}
