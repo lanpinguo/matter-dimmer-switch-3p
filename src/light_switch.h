@@ -29,7 +29,8 @@ public:
 	void InitiateActionSwitch(Action);
 	void DimmerChangeBrightness();
 	chip::EndpointId GetLightSwitchEndpointId() { return mLightSwitchEndpoint; }
-
+	void SetKeyId(uint8_t id);
+    
 	static LightSwitch &GetInstance()
 	{
 		static LightSwitch sLightSwitch;
@@ -41,4 +42,5 @@ private:
 	constexpr static auto kMaximumBrightness = 254;
 
 	chip::EndpointId mLightSwitchEndpoint;
+    uint8_t mKeyId;
 };

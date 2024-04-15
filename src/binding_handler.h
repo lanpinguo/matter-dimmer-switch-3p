@@ -18,6 +18,7 @@ public:
 		chip::EndpointId EndpointId;
 		chip::CommandId CommandId;
 		chip::ClusterId ClusterId;
+		uint8_t KeyId;
 		uint8_t Value;
 		bool IsGroup{ false };
 	};

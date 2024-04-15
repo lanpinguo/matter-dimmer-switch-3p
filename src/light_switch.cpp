@@ -21,10 +21,16 @@ void LightSwitch::Init(chip::EndpointId aLightSwitchEndpoint)
 	mLightSwitchEndpoint = aLightSwitchEndpoint;
 }
 
+void LightSwitch::SetKeyId(uint8_t id)
+{
+    mKeyId = id;
+}
+
 void LightSwitch::InitiateActionSwitch(Action mAction)
 {
 	BindingHandler::BindingData *data = Platform::New<BindingHandler::BindingData>();
 	if (data) {
+        data->KeyId = mKeyId;
 		data->EndpointId = mLightSwitchEndpoint;
 		data->ClusterId = Clusters::OnOff::Id;
 		switch (mAction) {
@@ -52,6 +58,7 @@ void LightSwitch::DimmerChangeBrightness()
 	static uint16_t sBrightness;
 	BindingHandler::BindingData *data = Platform::New<BindingHandler::BindingData>();
 	if (data) {
+        data->KeyId = mKeyId;
 		data->EndpointId = mLightSwitchEndpoint;
 		data->CommandId = Clusters::LevelControl::Commands::MoveToLevel::Id;
 		data->ClusterId = Clusters::LevelControl::Id;
